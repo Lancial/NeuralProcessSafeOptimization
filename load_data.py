@@ -8,13 +8,19 @@ def load_user_movie_rating():
 
 
 def load__movies_info():
-    item = pd.read_csv('ml-100k/u.item', sep="|", encoding='latin-1', header=None)
-    item.columns = ['movie id', 'movie title' ,'release date','video release date', 'IMDb URL', 'unknown', 'Action', 
+    movie_features = pd.read_csv('ml-100k/u.item', sep="|", encoding='latin-1', header=None)
+    movie_features.columns = ['movie id', 'movie title' ,'release date','video release date', 'IMDb URL', 'unknown', 'Action', 
                     'Adventure', 'Animation', 'Children\'s', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Fantasy', 'Film-Noir', 
                     'Horror', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western']
-    return item
+#     movies = movie_features['movie id'].unique()
+#     movieid2idx = {o:i for i,o in enumerate(movies)}
+#     movie_features['movie id'] = movie_features['movie id'].apply(lambda x: movieid2idx[x])
+    return movie_features
     
 def load_users_info():
-    user = pd.read_csv('ml-100k/u.user', sep="|", encoding='latin-1', header=None)
-    user.columns = ['user id', 'age', 'gender', 'occupation', 'zip code']
-    return user
+    user_features = pd.read_csv('ml-100k/u.user', sep="|", encoding='latin-1', header=None)
+    user_features.columns = ['user id', 'age', 'gender', 'occupation', 'zip code']
+#     users = user_features['user id'].unique()
+#     userid2idx = {o:i for i,o in enumerate(users)}
+#     user_features['user id'] = user_features['user id'].apply(lambda x: userid2idx[x])
+    return user_features
