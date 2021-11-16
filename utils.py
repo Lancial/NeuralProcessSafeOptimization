@@ -29,3 +29,17 @@ def utility_matrix(user_movie_ratings):
 
     util_df=pd.pivot_table(data=user_movie_ratings,values='rating',index='user id',columns='movie id')
     return util_df
+
+def postprocess_movie(movie_features):
+    movie_features = movie_features.drop(['IMDb URL', 'video release date', 'release date', 'movie title', 'movie id'], axis=1)
+    X = movie_features.to_numpy()
+    return X
+    
+def postprocess_user(user_features):
+    user_features["gender"] = user_features["gender"].astype('category')
+    user_features["gender"] = user_features["gender"].cat.codes
+    user_features["occupation"] = user_features["occupation"].astype('category')
+    user_features["occupation"] = user_features["occupation"].cat.codes
+    user_features = user_features.drop(["zip code", 'user id'], axis=1)
+    X = user_features.to_numpy().astype(float)
+    return X
