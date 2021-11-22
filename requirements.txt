@@ -3,3 +3,5 @@ torch
 numpy
 GPy
 matplotlib
+imageio
+torchvision
