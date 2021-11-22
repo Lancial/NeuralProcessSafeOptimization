@@ -1,5 +1,0 @@
-imageio
-matplotlib
-numpy
-torch
-torchvision
