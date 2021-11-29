@@ -3,9 +3,74 @@ from random import randint
 from neural_process import NeuralProcessImg
 from torch import nn
 from torch.distributions.kl import kl_divergence
-from utils import (context_target_split, batch_context_target_mask,
-                   img_mask_to_np_input)
+from utils import *
+from agents import *
+# class SafeOptAgents:
 
+
+        
+
+class MovieNPTrainer():
+    
+    def __init__(self, device, neural_process, optimizer, init_context_num=5, max_opt_iteration=20, max_target_num=50, print_freq=100):
+        self.device = device
+        self.neural_process = neural_process
+        self.optimizer = optimizer
+        self.print_freq = print_freq
+        self.init_context_num = init_context_num
+        self.max_opt_iteration = max_opt_iteration
+        self.max_target_num = max_target_num
+        self.steps = 0
+        self.epoch_loss_history = []
+        self.agents = EpsilonGreedyAgents()
+
+    def train(self, data_loader, epochs):
+        for epoch in range(epochs):
+            epoch_loss = 0.
+            for i, data in enumerate(data_loader):
+                
+
+                x, y = data
+                x, y, context_loc = sample_targets_and_save_contexts(x, y)
+                if len(context_loc) == 0:
+                    print('no safe initialization possible')
+                    continue
+                
+                for step in range(min(self.max_opt_iteration, y.shape[1] - len(context_loc))):
+                    
+                    self.optimizer.zero_grad()
+                    x_context, y_context, x_target, y_target = x[:, context_loc, :], y[:, context_loc, :], x, y
+#                     print(context_loc, y_target[:, context_loc, :])
+                    try:
+                        p_y_pred, q_target, q_context = self.neural_process(x_context, y_context, x_target, y_target)
+                    except ValueError:
+                        print(x_context.shape, y_context.shape, x_target.shape, y_target.shape)
+                        print(context_loc)
+                        
+                    loss = self._loss(p_y_pred, y_target, q_target, q_context)
+                    loss.backward()
+                    self.optimizer.step()
+                    
+                    # call the agent to perform querying
+                    mu = p_y_pred.loc.detach().numpy().squeeze(0)
+                    sigma = p_y_pred.scale.detach().numpy().squeeze(0)
+                    next_context = self.agents.get_next_query_point(mu, sigma, context_loc)
+                    context_loc.append(next_context)
+                    context_loc = sorted(context_loc)
+
+                epoch_loss += loss.item()
+                self.steps += 1
+
+                if self.steps % self.print_freq == 0:
+                    print("iteration {}, loss {:.3f}".format(self.steps, loss.item()))
+
+            print("Epoch: {}, Avg_loss: {}".format(epoch, epoch_loss / len(data_loader)))
+            self.epoch_loss_history.append(epoch_loss / len(data_loader))
+
+    def _loss(self, p_y_pred, y_target, q_target, q_context):
+        log_likelihood = p_y_pred.log_prob(y_target).mean(dim=0).sum()
+        kl = kl_divergence(q_target, q_context).mean(dim=0).sum()
+        return -log_likelihood + kl
 
 class NeuralProcessTrainer():
     """

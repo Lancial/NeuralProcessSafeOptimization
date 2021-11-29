@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import numpy as np
 import torch
+import random
 
 
 def reduce_movie_features(movie_features, k=20):
@@ -276,3 +277,60 @@ def inpaint(model, img, context_mask, device):
     # Reset model to mode it was in before inpainting
     model.neural_process.training = is_training
     return img_rec
+
+
+def context_rest_split(x, y, num_context):
+    num_points = x.shape[1]
+
+    # Sample locations of context and target points
+    indices = [i for i in range(num_points)]
+    locations = sorted(random.sample(indices,num_context))
+    rest_locations = sorted([i for i in indices if i not in locations])
+
+    x_context = x[:, locations, :]
+    y_context = y[:, locations, :]
+    x_rest = x[:, rest_locations, :]
+    y_rest = y[:, rest_locations, :]
+
+    return x_context, y_context, locations, x_rest, y_rest, rest_locations
+
+
+def sample_targets_and_save_contexts(x, y, n_samples=50, n_contexts=5, threshold=3.0):
+    num_points = x.shape[1]
+    indices = [i for i in range(num_points)]
+    sample_loc = sorted(random.sample(indices, min(n_samples, len(indices))))
+    
+    new_x = x[:, sample_loc, :]
+    new_y = y[:, sample_loc, :]
+    num_points = new_x.shape[1]
+    indices = [i for i in range(num_points)]
+    
+    context_loc = []
+    for i in indices:
+        if y[0, i, 0].item() > threshold:
+            context_loc.append(i)
+        if len(context_loc) == n_contexts:
+            break
+    return new_x, new_y, context_loc
+
+
+def sample_save_contexts(x, y, n_contexts=5, threshold=3.0):
+    num_points = x.shape[1]
+    indices = [i for i in range(num_points)]
+    random.shuffle(indices)
+    
+    context_loc = []
+    for i in indices:
+        if y[0, i, 0].item() > threshold:
+            context_loc.append(i)
+        if len(context_loc) == n_contexts:
+            break
+            
+    return context_loc
+        
+    
+                            
+    
+    
+    
+    
