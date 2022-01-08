@@ -1,10 +1,11 @@
 import glob
 import numpy as np
 import torch
+import safeopt
 from math import pi
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
-from torchvision import datasets, transforms
+
 
 
 class SineData(Dataset):
@@ -147,3 +148,52 @@ class CelebADataset(Dataset):
             sample = self.transform(sample)
         # Since there are no labels, we just return 0 for the "label" here
         return sample, 0
+
+    
+    
+class UserMovieTrainDataset(Dataset):
+    def __init__(self, U_matrix, users, movies):
+        self.U_matrix = np.nan_to_num(U_matrix.to_numpy())
+        self.users = users
+        self.movies = movies
+        
+    def __len__(self):
+        return self.U_matrix.shape[0] - 50
+    
+    def __getitem__(self, idx):
+        
+        user_ratings = self.U_matrix[idx]
+        user_ratings_valid_idx = np.nonzero(user_ratings)
+        rated_movies = self.movies[user_ratings_valid_idx] # n x 20
+        
+        user = self.users[idx]
+        user = np.repeat(user[np.newaxis,...], rated_movies.shape[0], axis=0) # n x 3
+        
+        features = np.concatenate([rated_movies, user], axis=1)
+        ratings = user_ratings[user_ratings_valid_idx].reshape(-1, 1)
+        
+        return torch.from_numpy(features).float(), torch.from_numpy(ratings).float()
+
+class UserMovieTestDataset(Dataset):
+    def __init__(self, U_matrix, users, movies):
+        self.U_matrix = np.nan_to_num(U_matrix.to_numpy())
+        self.users = users
+        self.movies = movies
+        
+    def __len__(self):
+        return 50
+    
+    def __getitem__(self, idx):
+        
+        user_ratings = self.U_matrix[-idx]
+        user_ratings_valid_idx = np.nonzero(user_ratings)
+        rated_movies = self.movies[user_ratings_valid_idx] # n x 20
+        
+        user = self.users[idx]
+        user = np.repeat(user[np.newaxis,...], rated_movies.shape[0], axis=0) # n x 3
+        
+        features = np.concatenate([rated_movies, user], axis=1)
+        ratings = user_ratings[user_ratings_valid_idx].reshape(-1, 1)
+        
+        return torch.from_numpy(features).float(), torch.from_numpy(ratings).float()
+    

@@ -5,7 +5,6 @@ from torch import nn
 from torch.distributions.kl import kl_divergence
 from utils import *
 from agents import *
-# class SafeOptAgents:
 
 
         

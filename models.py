@@ -5,18 +5,14 @@ from torch.nn import functional as F
 
 class Encoder(nn.Module):
     """Maps an (x_i, y_i) pair to a representation r_i.
-
     Parameters
     ----------
     x_dim : int
         Dimension of x values.
-
     y_dim : int
         Dimension of y values.
-
     h_dim : int
         Dimension of hidden layer.
-
     r_dim : int
         Dimension of output representation r.
     """
@@ -32,6 +28,10 @@ class Encoder(nn.Module):
                   nn.ReLU(inplace=True),
                   nn.Linear(h_dim, h_dim),
                   nn.ReLU(inplace=True),
+                  nn.Linear(h_dim, h_dim),
+                  nn.ReLU(inplace=True),
+                  nn.Linear(h_dim, h_dim),
+                  nn.ReLU(inplace=True),
                   nn.Linear(h_dim, r_dim)]
 
         self.input_to_hidden = nn.Sequential(*layers)
@@ -40,7 +40,6 @@ class Encoder(nn.Module):
         """
         x : torch.Tensor
             Shape (batch_size, x_dim)
-
         y : torch.Tensor
             Shape (batch_size, y_dim)
         """
@@ -52,12 +51,10 @@ class MuSigmaEncoder(nn.Module):
     """
     Maps a representation r to mu and sigma which will define the normal
     distribution from which we sample the latent variable z.
-
     Parameters
     ----------
     r_dim : int
         Dimension of output representation r.
-
     z_dim : int
         Dimension of latent variable z.
     """
@@ -88,18 +85,14 @@ class Decoder(nn.Module):
     """
     Maps target input x_target and samples z (encoding information about the
     context points) to predictions y_target.
-
     Parameters
     ----------
     x_dim : int
         Dimension of x values.
-
     z_dim : int
         Dimension of latent variable z.
-
     h_dim : int
         Dimension of hidden layer.
-
     y_dim : int
         Dimension of y values.
     """
@@ -116,6 +109,10 @@ class Decoder(nn.Module):
                   nn.Linear(h_dim, h_dim),
                   nn.ReLU(inplace=True),
                   nn.Linear(h_dim, h_dim),
+                  nn.ReLU(inplace=True),
+                  nn.Linear(h_dim, h_dim),
+                  nn.ReLU(inplace=True),
+                  nn.Linear(h_dim, h_dim),
                   nn.ReLU(inplace=True)]
 
         self.xz_to_hidden = nn.Sequential(*layers)
@@ -126,10 +123,8 @@ class Decoder(nn.Module):
         """
         x : torch.Tensor
             Shape (batch_size, num_points, x_dim)
-
         z : torch.Tensor
             Shape (batch_size, z_dim)
-
         Returns
         -------
         Returns mu and sigma for output distribution. Both have shape
