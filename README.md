@@ -6,3 +6,6 @@ Previous work that we borrowed wisdom from:
 https://arxiv.org/abs/1807.01622
 https://github.com/befelix/SafeOpt
 https://github.com/YannDubs/Neural-Process-Family
+
+Final Presentation:
+https://docs.google.com/presentation/d/1YQFB6VsVtFhKQPQklRzAzPcmlGsG-QcwqpqX_tlpbOM/edit?usp=sharing
